@@ -43,7 +43,7 @@ class SinkFilter(FilterFramework):
         archi=open('OutputSystemA.txt','w')
         archi.close()
         archi=open('OutputSystemA.txt','a') 
-        archi.write('Tiempo\t\t\tTemperatura\t Altitud\t Presion\n')
+        archi.write('Tiempo\t\t\tTemperatura(C)\t Altitud(M)\t Velocidad(K)\n')
         archi.close()
 
         while True:
@@ -145,9 +145,13 @@ class SinkFilter(FilterFramework):
                 if a[0]!='' and a[1]!='' and a[2]!='' and a[3]!='':
                     archi=open('OutputSystemA.txt','a') 
                     b=''
-                    for x in a:
-                        b+=x                         
+                    j=0
+                    while j<4:
+                        b+=a[j] 
+                        a[j]=''
+                        j+=1                        
                     b+="\n" 
+
                     archi.write(b)                
                     archi.close()
                     
