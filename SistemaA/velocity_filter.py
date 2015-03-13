@@ -3,7 +3,7 @@ import struct
 from filter_framework import FilterFramework
 
 
-class TimeFilter(FilterFramework):
+class VelocityFilter(FilterFramework):
     """ This class serves as an example for using the SinkFilterTemplate for creating a sink filter. This particular
         filter reads some input from the filter's input port and does the following:
 
@@ -23,9 +23,7 @@ class TimeFilter(FilterFramework):
 		    TimeStampFormat is used to format the time value so that it can be easily printed
 		    to the terminal.
             """
-           
-        timeStamp = 0
-        timeStampFormat = "%Y:%m:%d:%H:%M:%S"
+                   
         measurementLength = 8  # This is the length of all measurements (including time) in bytes
         idLength = 4
                     # This is the length of IDs in the byte stream
@@ -38,7 +36,7 @@ class TimeFilter(FilterFramework):
         idMeasurement = 0       # This is the measurement id
         
         # We announce to the world that we are alive ...
-        print "{0}::TimeFilter reading".format(self.getName())
+        print "{0}::VelocityFilter reading".format(self.getName())
         
         while True:
             try:
@@ -50,40 +48,48 @@ class TimeFilter(FilterFramework):
                 i = 0
       
                 while i < idLength:
-                    dataByte = self.readFilterInputPort() # This is where we read the byte from the stream...  
-
+                    dataByte = self.readFilterInputPort() # This is where we read the byte from the stream...                      
+                    self.writeFilterOutputPort(dataByte)
                     idMeasurement = idMeasurement << 8     # We append the byte on to ID ...
                     idMeasurement = idMeasurement | dataByte                
                     bytesRead += 1
-                    i += 1
-                
-                                             
+                    i += 1                        
+
                 measurement = 0                
                 i = 0
                 while i < measurementLength:
                     dataByte = self.readFilterInputPort()
-                    measurement = measurement << 8
-                    measurement = measurement | dataByte
+                    if(idMeasurement==1):
+                        measurement = measurement << 8
+                        measurement = measurement | dataByte
+                    else:
+                        self.writeFilterOutputPort(dataByte)
+                        byteswritten+=1                    
                     bytesRead += 1
-                    i += 1
+                    i += 1                                                    
+                    
+                if idMeasurement == 1:
+                    #convertimos la medida de 8 bytes en un arreglo de 8 bytes
+                    byteArray = struct.pack("@Q", measurement) 
                 
-                    print(idMeasurement)
-                    if idMeasurement == 0:                         			         			       			            
-                        timeStamp = datetime.datetime.fromtimestamp(measurement/1000.0)
-                        print "ID = {1} {0}".format(timeStamp.strftime(timeStampFormat), idMeasurement)
-                        
+                    #convertimos el arreglo de 8 bytes en un numero decimal
+                    doubleValue = struct.unpack('d', byteArray)[0]                        
+                                        
+                    c=doubleValue*1.609344                                                                                     
+                    d=struct.pack('d', c) 
+                    v=struct.unpack("@Q", d)[0] 
+                    print "ID = {0} Velocidad {1} kilometros {2} medida {3} unpack {4} ".format(idMeasurement, doubleValue, c, measurement, v)                                                       
+                    dataByteTmp=0
+                    j=7 
+                    while j >= 0:
+                        m= v >> 8 * j     # We append the byte on to ID ...                        
+                        dataByteTmp = m & 255                        
+                        self.writeFilterOutputPort(dataByteTmp)                                                
+                        byteswritten+=1
+                        j-=1                      
+                              
                     
-                    if idMeasurement == 4:
-                        #convertimos la medida de 8 bytes en un arreglo de 8 bytes
-                        byteArray = struct.pack("@Q", measurement) 
-                    
-                        #convertimos el arreglo de 8 bytes en un numero decimal
-                        doubleValue = struct.unpack('d', byteArray)[0]
-                    
-                        print "{0} -- ID = {1} {2}".format(timeStamp.strftime(timeStampFormat), idMeasurement, doubleValue) 
-                    
-
             except:
                 self.closePorts()
-                print "{0}::TimeFilter; bytes read: {1}, bytes written:{2}".format(self.getName(), bytesRead, byteswritten)
+                print "{0}::VelocityFilter; bytes read: {1}, bytes written:{2}".format(self.getName(), bytesRead, byteswritten)
                 break

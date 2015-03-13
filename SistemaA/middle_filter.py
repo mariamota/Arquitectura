@@ -1,3 +1,4 @@
+# -*- encoding: utf-8 -*-
 import datetime
 import struct
 from filter_framework import FilterFramework
@@ -24,15 +25,12 @@ class MiddleFilter(FilterFramework):
 		    to the terminal.
             """
            
-        timeStamp = 0
-        timeStampFormat = "%Y:%m:%d:%H:%M:%S"
         measurementLength = 8   # This is the length of all measurements (including time) in bytes
         idLength = 4
-                    # This is the length of IDs in the byte stream
-        
+                    # This is the length of IDs in the byte stream            
         dataByte = 0            # This is the data byte read from the stream
         bytesRead = 0           # This is the number of bytes read from the stream
-        bytesdiscarted=0		# This is the number of bytes descarted from the
+        
         byteswritten=0
         measurement = 0         # This is the word used to store all measurements - conversions are illustrated.
         idMeasurement = 0       # This is the measurement id
@@ -50,55 +48,32 @@ class MiddleFilter(FilterFramework):
                 i = 0
                 
                 while i < idLength:
-                    dataByte = self.readFilterInputPort() # This is where we read the byte from the stream...                                      
+                    dataByte = self.readFilterInputPort() # This is where we read the byte from the stream...                                                        
                     idMeasurement = idMeasurement << 8     # We append the byte on to ID ...
-                    idMeasurement = idMeasurement | dataByte                
+                    idMeasurement = idMeasurement | dataByte                                              
                     bytesRead += 1
                     i += 1
 
-
-                if (idMeasurement==0 or idMeasurement==1 or idMeasurement==2 or idMeasurement==4):
-                    dataByte=str.encode(idMeasurement)
-                    type(dataByte)
-                    self.writeFilterOutputPort(dataByte) 
-                    print "id = {0} ".format(dataByte) 
-
-                    """
-                    dataByte=0
+                if(idMeasurement==0 or idMeasurement==1 or idMeasurement==2 or idMeasurement==4):                                        
+                    dataByteTmp=0                    
                     i=3 
                     while i >= 0:
-                        idMeasurement= idMeasurement>> 8 * i     # We append the byte on to ID ...
-                        dataByte=(byte) dMeasurement
-                        print "id = {0} ".format(dataByte) 
-                        self.writeFilterOutputPort(dataByte) 
-                        i-=1 
-                    """
+                       m= idMeasurement >> 8 * i     # We append the byte on to ID ...                        
+                       dataByteTmp = m & 255
+                       self.writeFilterOutputPort(dataByteTmp)                                            
+                       byteswritten+=1
+                       i-=1  
 
-                    measurement = 0                
-                    i = 0
-                    while i < measurementLength:
-                        dataByte = self.readFilterInputPort()                                          
-                        measurement = measurement << 8
-                        measurement = measurement | dataByte                     
-                        bytesRead += 1
-                        i += 1
-                        self.writeFilterOutputPort(dataByte)                                      
-                    	byteswritten+=1    
-
-                    """if idMeasurement==1:
-                    	
+                measurement = 0                
+                i = 0
+                while i < measurementLength:
+                    dataByte = self.readFilterInputPort()                                                                            
+                    if(idMeasurement==0 or idMeasurement==1 or idMeasurement==2 or idMeasurement==4):
                         self.writeFilterOutputPort(dataByte)
-                    	byteswritten+=1    
-                    if idMeasurement==2:
-                    	
-                        self.writeFilterOutputPort(dataByte)
-                    	byteswritten+=1    
-                    if idMeasurement==4:
-                    	
-                        self.writeFilterOutputPort(dataByte)
-                        byteswritten+=1		 
-                    # print "id = {0} medida {1}".format(idMeasurement, measurement) """                                                
-                
+                        byteswritten+=1                  
+                    bytesRead += 1
+                    i += 1                                                              
+                            
             except:
                 self.closePorts()
                 print "{0}::Middle Filter; bytes read: {1}, bytes written:{2}".format(self.getName(), bytesRead, byteswritten)
