@@ -118,7 +118,7 @@ class SinkFilter(FilterFramework):
                     doubleValue = struct.unpack('d', byteArray)[0]
                 
                     print "ID = {0} Velocidad {1}".format( idMeasurement, doubleValue)
-                    a[1]="%.5f \t" % doubleValue 
+                    a[3]="%.5f \t" % doubleValue 
                 
                 if idMeasurement == 2:
                     #convertimos la medida de 8 bytes en un arreglo de 8 bytes
@@ -138,7 +138,7 @@ class SinkFilter(FilterFramework):
                     doubleValue = struct.unpack('d', byteArray)[0]
                 
                     print "ID = {0} Temperatura {1}".format( idMeasurement, doubleValue) 
-                    a[3]="%.5f \t" % doubleValue 
+                    a[1]="%.5f \t" % doubleValue 
                 
 
 
